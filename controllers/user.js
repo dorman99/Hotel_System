@@ -27,5 +27,5 @@ var getMyOrder = function(req,res,next) {
 }
 
 module.exports = {
-	getMyOrder: getMyOrder
+	getMyOrder: getMyOrder,
 }

@@ -5,6 +5,8 @@ var moment = require('moment')
 var orderModel = require('../models/order')
 
 var createOrder = function(req,res,next) {
+		
+		req.body.userId = req.body.user.userId;
 		console.log(req.body)
 		projectProvider.mqHandleCreateOrder(req.body,moment)
 			.then(resu=> {

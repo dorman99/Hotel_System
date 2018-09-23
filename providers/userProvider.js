@@ -18,6 +18,22 @@ var getMyProject = function(connection,userId) {
 	})
 }
 
+var authUser = function(connection,token) {
+	return new Promise(function(resolve,reject) {
+		let q = `select * from Users where token = '${token}'`
+		connection.query(q,function(err,result) {
+			if(err) {
+				return reject(err)
+			} else if(result.length <= 0) {
+				return reject(false)
+			} else {
+				return resolve(result[0])
+			}
+		})
+	})
+}
+
 module.exports = {
-	getMyProject: getMyProject
+	getMyProject: getMyProject,
+	authUser: authUser
 }

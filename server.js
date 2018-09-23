@@ -6,7 +6,7 @@ var login = require('./routes/login');
 var singup = require('./routes/signup')
 var order = require('./routes/order')
 var user = require('./routes/user')
-
+var admin = require('./routes/adminRoutes')
 app.set('port',4000);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -15,6 +15,8 @@ app.use('/login', login)
 app.use('/signup',singup)
 app.use('/order',order)
 app.use('/user',user)
+app.use('/admin',admin)
+
 
 
 app.use(function (req, res, next) {

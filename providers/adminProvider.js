@@ -1,48 +1,7 @@
-
 var crypto = require('crypto')
-var login = function(connection,email,password) {
-	// let email = req.body.email;
-	// let password = req.body.password;
-	return new Promise(function(resolve,reject) {
-				if(isEmail(email)) {
-					let q = `Select * from Users where email = '${email}' AND password ='${password}'`
-					console.log(q)
-					connection.query(q,function(err,rez) {
-						console.log(rez)
-						if(err) {
-							return reject({
-								statusCode: 500,
-								status: 'Internal Server Error',
-								message: err.message
-							})
-						} else if(rez.length > 0) {
-							return resolve(rez[0].token)
-						} else {
-							return reject({
-								statusCode: 403,
-								status: 'Login Failed',
-								message: 'Invalid Password'
-							})
-						}
-					})
-				} else {
-					return reject({
-						statusCode: 403,
-						status: 'Login Failed',
-						message: 'Invalid Email Format'
-					})
-				}
-	})
-}
-
-var isEmail = function(email) {
-	var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-		return re.test(String(email).toLowerCase());
-}
-
-var singUp = function(connection,userData,async) {
-	return new Promise(function(resolve,reject) {
-		if(isEmail(userData.email)) {
+var createUser = function (connection, userData, async) {
+	return new Promise(function (resolve, reject) {
+		if (isEmail(userData.email)) {
 			async.series([
 				function (callback) {
 					let query = `select * from Users where email = '${userData.email}'`
@@ -70,11 +29,11 @@ var singUp = function(connection,userData,async) {
 					})
 				}, function (callback) {
 					userData.password = crypto.createHash('md5').update(userData.password, 'utf-8').digest('hex');
-					userData.usertype = 'customer'
+					// userData.usertype = 'customer'
 					userData.token = crypto.createHash('md5').update(userData.firstName + ' ' + userData.lastName, 'utf-8').digest('hex')
 					connection.query(`INSERT INTO Users SET ?`, [userData], function (err, restult) {
 						if (err) {
-							console.log('aa ',err)
+							console.log('aa ', err)
 							callback({
 								statusCode: 500,
 								status: 'Internal Server Error',
@@ -110,7 +69,25 @@ var singUp = function(connection,userData,async) {
 	})
 }
 
+var isEmail = function (email) {
+	var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+	return re.test(String(email).toLowerCase());
+}
+
+var deleteUser = function(connection,userId) {
+	return new Promise(function(resolve,reject) {
+		let q = `DELETE from Users where userId = ${userId}`
+			connection.query(q,function(err,ress) {
+				if(err) {
+					throw err
+				} else {
+					return resolve(true)
+				}
+			})
+	})
+}
+
 module.exports = {
-	login:login,
-	singUp: singUp
+	createUser: createUser,
+	deleteUser: deleteUser
 }

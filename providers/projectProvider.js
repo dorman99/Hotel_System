@@ -62,6 +62,70 @@ var getAllRoomAvailable = function(connection,dateCheckInRequest) {
 			})
 	})
 }
+// var createOrder = function (connection, async, roomOrderArr, checkIn, detail, userId, moment, night,projectCreatedDate) {
+// 	console.log('masuk ke create order')
+// 	return new Promise(function (resolve, reject) {
+// 		let dateCheckInRequest = projectCreatedDate
+// 		// let result = getAllRoomAvailableMq(connection,dataChekInRequest)
+// 		async.waterfall([
+// 			function (callback) {
+// 				let totalPrice = 0;
+// 				for (let ii = 0; ii < roomOrderArr.length; ii++) {
+// 					console.log('--- ', roomOrderArr[ii])
+// 					totalPrice += roomOrderArr[ii].price;
+// 				}
+// 				// console.log(moment)
+// 				let orderDetail = {}
+// 				orderDetail.userId = userId;
+// 				orderDetail.checkIn = moment().format(checkIn);
+// 				orderDetail.createdDate = new Date()
+// 				orderDetail.project_status = 'booked'
+// 				orderDetail.paymentAmount = totalPrice;
+// 				orderDetail.checkOut = moment(checkIn).add(night, 'days').format('YYYY-MM-DD')
+// 				connection.query(`INSERT INTO userProjects SET ?`, [orderDetail], function (err, rezz) {
+// 					console.log(rezz)
+// 					if (err) {
+// 						callback({
+// 							status: 'Internal Server Error',
+// 							message: err.message,
+// 							statusCode: 500
+// 						})
+// 					} else {
+// 						callback(null, rezz.insertId, orderDetail.checkIn, orderDetail.checkOut)
+// 					}
+// 				})
+// 			}, function (orderId, checkInDate, checkOutDate, callback) {
+// 				console.log(orderId, ' ===== ')
+// 				let values = [];
+// 				for (let ii = 0; ii < roomOrderArr.length; ii++) {
+// 					values.push([orderId, roomOrderArr[ii].roomId, roomOrderArr[ii].quantity, checkInDate, checkOutDate])
+// 				}
+// 				console.log(values)
+// 				let q = `INSERT INTO projectDetail (project_id,room_id,quantity,checkInDate,checkOutDate) VALUES ?`
+// 				connection.query(q, [values], function (err, rez) {
+// 					console.log(rez)
+// 					if (err) {
+// 						console.log(err)
+// 						callback({
+// 							status: 'Internal Server Error',
+// 							statusCode: 500,
+// 							message: err.message
+// 						})
+// 					} else {
+// 						callback(null, true)
+// 					}
+// 				})
+// 			}
+// 		], function (err, result) {
+// 			if (err) {
+// 				console.log(err)
+// 				return reject(err);
+// 			} else {
+// 				return resolve(true);
+// 			}
+// 		})
+// 	})
+// }
 
 var createOrder = function(connection,async,roomOrderArr,checkIn,detail,userId,moment,night) {
 	console.log('masuk ke create order')
@@ -277,10 +341,7 @@ var handleOtherAvailableRoom = function(roomData,checkoutRooms) {
 }
 
 var mqHandleCreateOrder =  function(orderData,moment) {
-	let orderQueueData = {
-		userId:orderData.userId,
-		createdDate: moment()
-	}
+	orderData.timeToCreate = moment();
 	return new Promise(function(resolve,reject) {
 		orderModel.insertData(orderData,function(err,insertedData) {
 			if(err) {
@@ -304,6 +365,12 @@ var mqHandleCreateOrder =  function(orderData,moment) {
 		})
 	})
 }
+
+// var mqHandleCreateOrder = function(userId) {
+// 	return new Promise(function(resolve,reject) {
+// 		orderModel.findAll()
+// 	})
+// }
 
 module.exports = {
 	getAllRoomAvailable : getAllRoomAvailable,
