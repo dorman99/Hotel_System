@@ -15,7 +15,7 @@ var seedAdmin = function() {
 }
 
 var seedHotel = function() {
-	let query = `INSERT INTO Rooms (name,description,image,quantity,price) VALUES ?`
+	let query = `INSERT INTO Rooms (name,description,image,daily_quantity,price) VALUES ?`
 			values = [
 				['Deluxe', 'Lorem ipsum.... dorem ipsamet.','https://www.google.co.id/url?sa=i&rct=j&q=&esrc=s&source=images&cd=&cad=rja&uact=8&ved=2ahUKEwiDtP7hnM7dAhWHPo8KHWmxAPEQjRx6BAgBEAU&url=https%3A%2F%2Fwww.hotelciputra.com%2Fen-gb%2Frooms%2Fdeluxe&psig=AOvVaw1zJzTMwmisf2YOWNjYq_FL&ust=1537692411732040',5,1000000],
 				['Luxury', 'Lorem ipsum.... dorem ipsamet.', 'https://www.google.co.id/url?sa=i&rct=j&q=&esrc=s&source=images&cd=&cad=rja&uact=8&ved=2ahUKEwiDtP7hnM7dAhWHPo8KHWmxAPEQjRx6BAgBEAU&url=https%3A%2F%2Fwww.hotelciputra.com%2Fen-gb%2Frooms%2Fdeluxe&psig=AOvVaw1zJzTMwmisf2YOWNjYq_FL&ust=1537692411732040', 5, 500000]

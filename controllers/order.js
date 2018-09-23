@@ -12,51 +12,18 @@ var createOrder = function(req,res,next) {
 			let checkInTime = req.body.checkInTime;
 			let night = req.body.night;
 			let detail = req.body.detailOrder || '';
-			// console.log(roomOrderArr)
-			// console.log(req.body)
-			// console.log(connection)
+
 			projectProvider.createOrder(connection,async,roomOrderArr,checkInTime,detail,userId,moment,night)
 				.then(rezz => {
-					async.each(roomOrderArr,function(room,callback) {
-						projectProvider.roomUpdate(connection,room.roomId,room.quantity).then(res=> {
-							console.log(res)
-							callback()
-						}).catch(err=>{
-							callback(err)
+						connection.commit(function () {
+							connection.release();
+							res.status(200).json({
+								message: 'Your Hotel Room has been Booked',
+								status: 'Order Success'
+							})
 						})
-					},function(err) {
-						if(err) {
-							connection.rollback(function() {
-								connection.release();
-								req.body.error = {
-									status_code: err.status_code,
-									status: err.status,
-									message: err.message
-								}
-								return next();
-							})
-						} else {
-							connection.commit(function() {
-								connection.release();
-								res.status(200).json({
-									message: 'Your Hotel Room has been Booked',
-									status: 'Order Success'
-								})
-							})
-						}
-					})
-					// connection.release();
-					// connection.query('UPDATE Rooms SET quantity = quantity+5 where roomId = 1',function(err,resul) {
-					// 	connection.commit(function() {
-					// 		connection.release();
-					// 		console.log(resul)
-							// res.status(200).json({
-							// 	message: 'Your Hotel Room has been Booked',
-							// 	status: 'Order Success'
-							// })
-					// 	})
-					// })
 				}).catch(err=> {
+					// console.log(err, '-- ')
 					req.body.error =  {
 						status_code: err.status_code,
 						status: err.status,
@@ -68,6 +35,115 @@ var createOrder = function(req,res,next) {
 	})
 }
 
+var cancelOrder = function(req,res,next) {
+	database.pool.getConnection('MASTER',function(err,connection) {
+		if(err) {
+			req.body.error = {
+				status: 'Internal Server Error',
+				status_code: 500,
+				message: err.message
+			}
+			return next()
+		} else {
+			connection.beginTransaction(function() {
+				let projectId = req.body.projectId;
+				projectProvider.cancelBook(connection, projectId)
+					.then(result => {
+						projectProvider.updateAfterCancel(connection, projectId, async).then(result => {
+							connection.commit(function() {
+								connection.release();
+								res.status(200).json({
+									message: 'Update project has been canceled',
+									status: 'Success'
+								})
+							})
+						}).catch(err => {
+							connection.rollback(function() {
+								connection.release();
+								req.body.error = {
+									status: err.status,
+									status_code: err.status_code,
+									message: err.message
+								}
+								return next();
+							})
+						})
+					}).catch(err => {
+						console.log(err);
+						connection.rollback(function () {
+							connection.release();
+							req.body.error = {
+								status: err.status,
+								status_code: err.status_code,
+								message: err.message
+							}
+							return next();
+						}) 
+					})
+			})
+		}
+	})
+}
+
+var editOrder = function(req,res,next) {
+	database.pool.getConnection('MASTER',function(err,connection) {
+		if(err) {
+			callback({
+				status: 'Internal Server Error',
+				status_code: 500,
+				message: err.message
+			})
+		} else {
+			
+		}
+	})
+}
+
+var allAvailableRoom = function(req,res,next) {
+	database.pool.getConnection('MASTER',function(err,connection) {
+		if(err) {
+			req.body.error = {
+				status: 'Internal Server Error',
+				status_code: 500
+			}
+			return next()
+		} else {
+			// ini get dsari sini
+			let dateInRequest = moment().format('YYYY-MM-DD');
+			projectProvider.getAllRoomAvailable(connection,dateInRequest).then(ress=> {
+				// connection.release(); 
+				if(ress.code == 200) {
+					// console.log('--',ress.dataRoom, ' -- 'data)
+					ress = projectProvider.handleOtherAvailableRoom(ress.dataRoom,ress.dataCheckout)
+					//  ress.data = ress.data.sort((a, b) => (a.roomId > b.roomId) ? 1 : ((b.roomId > a.roomId) ? -1 : 0))
+					//  ress.data = projectProvider.handleAvailableRoomData(ress.data)
+					 res.status(200).json({
+						 message: 'Here Available Room For You',
+						 rooms: ress,
+						 status: 'success'
+					 })
+				 } else if(ress.code == 201) {
+					res.status(200).json({
+						message: 'Here Available Room For You',
+						rooms: ress.data,
+						status: 'success'
+					})
+				 }
+			}).catch(err=> {
+				connection.release()
+				req.body.error = {
+					status: err.status,
+					status_code: err.status_code,
+					message: err.message
+				}
+				return next()
+			})
+		}
+	})
+}
+
 module.exports = {
-	createOrder: createOrder
+	createOrder: createOrder,
+	cancelOrder: cancelOrder,
+	allAvailableRoom: allAvailableRoom
 }

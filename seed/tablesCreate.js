@@ -27,7 +27,7 @@ var createTableRooms = function() {
 				name varchar(255),
 				description text,
 				image varchar(255),
-				quantity int,
+				daily_quantity int,
 				price int
 	)`
 		database.query(query,function(err,result) {
@@ -67,7 +67,9 @@ var createTableProjectDetail = function() {
 	let query = `CREATE TABLE projectDetail (
 		room_id int,
 		project_id int,
-		quantity int
+		quantity int,
+		checkInDate Date,
+		checkOutDate Date
 	)`
 	database.query(query,function(err,result) {
 		if(err) {
@@ -81,4 +83,4 @@ var createTableProjectDetail = function() {
 // createUserTable(); //create table users
 // createTableRooms();
 createTableProject();
-// createTableProjectDetail();
+createTableProjectDetail();
