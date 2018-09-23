@@ -45,9 +45,10 @@ var singUp = function(connection,userData,async) {
 			async.series([
 				function (callback) {
 					let query = `select * from Users where email = '${userData.email}'`
-
 					connection.query(query, function (err, rezz) {
+						console.log(rezz)
 						if (err) {
+							console.log('lol')
 							callback({
 								status_code: 500,
 								status: 'Internal Server Error',
@@ -55,6 +56,7 @@ var singUp = function(connection,userData,async) {
 							})
 						} else {
 							if (rezz.length > 0) {
+								console.log('asaa')
 								callback({
 									status_code: 404,
 									status: 'Registration Failed',
@@ -67,28 +69,42 @@ var singUp = function(connection,userData,async) {
 					})
 				}, function (callback) {
 					userData.password = crypto.createHash('md5').update(userData.password, 'utf-8').digest('hex');
+					userData.usertype = 'customer'
 					userData.token = crypto.createHash('md5').update(userData.firstName + ' ' + userData.lastName, 'utf-8').digest('hex')
 					connection.query(`INSERT INTO Users SET ?`, [userData], function (err, restult) {
 						if (err) {
+							console.log('aa ',err)
 							callback({
 								status_code: 500,
 								status: 'Internal Server Error',
 								message: err.message
 							})
 						} else {
-							callback(null, true)
+							callback(null, userData.token)
 						}
 					})
 				}
 			], function (err, results) {
 				if (err) {
-					return reject(err)
+					console.log(err)
+					let errorObj = {
+						status_code: err.status_code,
+						status: err.status,
+						message: err.message
+					}
+					console.log(errorObj)
+					return reject(errorObj)
 				} else {
-					return resolve(true)
+					// console.log('--->> ',results)
+					return resolve(results[1])
 				}
 			})
 		} else {
-			return reject(er) // sampe disini
+			return reject({
+				status: 'Email Format Invalid ',
+				status_code: 404,
+				message: 'Please Checkout Your Email format'
+			}) // sampe disini
 		}
 	})
 }

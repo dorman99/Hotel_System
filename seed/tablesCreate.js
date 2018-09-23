@@ -46,7 +46,9 @@ var createTableProject = function() {
 			checkIn DATE,
 			createdDate DATE,
 			modifiedDate DATE,
+			checkOut Date,
 			project_status varchar(255),
+			paymentAmount int,
 			details varchar(255),
 					FOREIGN KEY (userId)
 					REFERENCES Users (userId)
@@ -64,7 +66,8 @@ var createTableProject = function() {
 var createTableProjectDetail = function() {
 	let query = `CREATE TABLE projectDetail (
 		room_id int,
-		project_id int
+		project_id int,
+		quantity int
 	)`
 	database.query(query,function(err,result) {
 		if(err) {
@@ -75,7 +78,7 @@ var createTableProjectDetail = function() {
 	})
 }
 
-createUserTable(); //create table users
+// createUserTable(); //create table users
 // createTableRooms();
 createTableProject();
 // createTableProjectDetail();

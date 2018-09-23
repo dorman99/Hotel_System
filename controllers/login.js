@@ -31,6 +31,7 @@ var login = function(req,res,next) {
 }
 
 var singUp = function(req,res,next) {
+	console.log('masuk ke sini')
 	database.pool.getConnection('MASTER',function(err,connection) {
 		if(err) {
 			connection.release();
@@ -44,14 +45,26 @@ var singUp = function(req,res,next) {
 			connection.beginTransaction(function() {
 				let userData = req.body.userData;
 				loginProvider.singUp(connection,userData,async).then(rez=> {
-					
+					connection.commit(function() {
+						connection.release();
+						res.status(200).json({
+							status_code: 200,
+							status: 'Sign up Succes',
+							token: rez
+						})
+					}) 
 				}).catch(err=> {
-					req.body.error = {
-					status_code: err.status_code,
-					status: err.status,
-					message: err.message
-				}
-				return next()
+					connection.rollback(function() {
+						connection.release();
+						// console.log(err)
+						req.body.error = {
+							status_code: err.status_code,
+							status: err.status,
+							message: err.message
+						}
+						// console.log(req.body)
+						return next()
+					})
 				})
 			})
 		}
@@ -59,5 +72,6 @@ var singUp = function(req,res,next) {
 }
 
 module.exports = {
-	login: login
+	login: login,
+	singUp:singUp
 }

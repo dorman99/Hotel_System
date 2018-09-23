@@ -30,4 +30,4 @@ var seedHotel = function() {
 }
 
 seedAdmin();
-// seedHotel();
+seedHotel();
