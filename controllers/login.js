@@ -20,7 +20,7 @@ var login = function(req,res,next) {
 				})
 			}).catch(err=> {
 				req.body.error = {
-					status_code: err.status_code,
+					statusCode: err.statusCode,
 					status: err.status,
 					message: err.message
 				}
@@ -36,7 +36,7 @@ var singUp = function(req,res,next) {
 		if(err) {
 			connection.release();
 			req.body.error = {
-				status_code: 500,
+				statusCode: 500,
 				status: 'Internal Server Error',
 				message: err.message
 			}
@@ -48,7 +48,7 @@ var singUp = function(req,res,next) {
 					connection.commit(function() {
 						connection.release();
 						res.status(200).json({
-							status_code: 200,
+							statusCode: 200,
 							status: 'Sign up Succes',
 							token: rez
 						})
@@ -58,7 +58,7 @@ var singUp = function(req,res,next) {
 						connection.release();
 						// console.log(err)
 						req.body.error = {
-							status_code: err.status_code,
+							statusCode: err.statusCode,
 							status: err.status,
 							message: err.message
 						}

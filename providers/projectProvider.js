@@ -1,4 +1,6 @@
+const amqp = require('amqplib/callback_api')
 var moment = require('moment');
+var orderModel = require('../models/order')
 var getAllRoomAvailable = function(connection,dateCheckInRequest) {
 	return new Promise(function(resolve,reject) {
 		let que = `SELECT * from userProjects where createdDate = '${dateCheckInRequest}'`
@@ -6,7 +8,7 @@ var getAllRoomAvailable = function(connection,dateCheckInRequest) {
 				console.log(result)
 				if(err) {
 					let objError = {
-						status_code: 500,
+						statusCode: 500,
 						status: 'Internal Server Error',
 						message: err.message
 					}
@@ -16,7 +18,7 @@ var getAllRoomAvailable = function(connection,dateCheckInRequest) {
 					connection.query(ques,function(err,rez) {
 						if(err) {
 							let objError = {
-								status_code: 500,
+								statusCode: 500,
 								status: 'Internal Server Error',
 								message: err.message
 							}
@@ -35,7 +37,7 @@ var getAllRoomAvailable = function(connection,dateCheckInRequest) {
 					connection.query(q, function (err, results) {
 						if (err) {
 							let objError = {
-								status_code: 500,
+								statusCode: 500,
 								status: 'Internal Server Error',
 								message: err.message
 							}
@@ -45,7 +47,7 @@ var getAllRoomAvailable = function(connection,dateCheckInRequest) {
 							connection.query(getRom,function(err,resulth) {
 								if (err) {
 									let objError = {
-										status_code: 500,
+										statusCode: 500,
 										status: 'Internal Server Error',
 										message: err.message
 									}
@@ -85,7 +87,7 @@ var createOrder = function(connection,async,roomOrderArr,checkIn,detail,userId,m
 									callback({
 										status: 'Internal Server Error',
 										message: err.message,
-										status_code: 500
+										statusCode: 500
 									})						
 							} else {
 								callback(null,rezz.insertId,orderDetail.checkIn,orderDetail.checkOut)
@@ -105,7 +107,7 @@ var createOrder = function(connection,async,roomOrderArr,checkIn,detail,userId,m
 						console.log(err)
 						callback({
 							status: 'Internal Server Error',
-							status_code: 500,
+							statusCode: 500,
 							message: err.message
 						})
 					} else {
@@ -131,7 +133,7 @@ var roomUpdateBook = function(connection,roomId,quantity) {
 			if(err) {
 				return reject({
 					status: 'Internal Server Error',
-					status_code: 500,
+					statusCode: 500,
 					message: err.message
 				})
 			} else {
@@ -140,13 +142,13 @@ var roomUpdateBook = function(connection,roomId,quantity) {
 					if(err) {
 						return reject({
 							status: 'Internal Server error',
-							status_code: 500,
+							statusCode: 500,
 							message: err.message
 						})
 					} else if (ress[0].quantity < 0) {
 						return reject({
 							status: 'Invalid Format',
-							status_code: 403,
+							statusCode: 403,
 							message: `Not Enough Room(${roomId}) For Your Request`,
 						})
 					} else {
@@ -168,13 +170,13 @@ var cancelBook = function(connection,projectId) {
 			if(err) {
 				return reject({
 					status: 'Internal Server error',
-					status_code: 500,
+					statusCode: 500,
 					message: err.message
 				})
 			} else if(rezzz.length>0) {
 				return reject({
 					status: 'Cannot project Update project',
-					status_code: 403,
+					statusCode: 403,
 					message: 'Project Has Been Updated before'
 				})
 			} else {
@@ -184,7 +186,7 @@ var cancelBook = function(connection,projectId) {
 					if (err) {
 						return reject({
 							status: 'Internal Server Error',
-							status_code: 500,
+							statusCode: 500,
 							message: err.message
 						})
 					} else {
@@ -203,7 +205,7 @@ var updateAfterCancel = function(connection,projectId,async) {
 				 if(err) {
 					 return reject({
 						 status: 'Error',
-						 status_code: 500,
+						 statusCode: 500,
 						 message: err.message
 					 })
 				 } else {
@@ -274,6 +276,34 @@ var handleOtherAvailableRoom = function(roomData,checkoutRooms) {
 	return newRoomAvail
 }
 
+var mqHandleCreateOrder =  function(orderData,moment) {
+	let orderQueueData = {
+		userId:orderData.userId,
+		createdDate: moment()
+	}
+	return new Promise(function(resolve,reject) {
+		orderModel.insertData(orderData,function(err,insertedData) {
+			if(err) {
+				return reject({
+					statusCode: 500,
+					status: 'mongo error',
+					message: err.message
+				})
+			} else {
+				amqp.connect('amqp://localhost',function(err,conn) {
+					if(err) throw err
+					conn.createChannel(function(err,ch) {
+						if(err) throw err
+						ch.assertQueue('orderHandle',{durable:true},function reply(err,q) {
+							ch.sendToQueue(q.queue,new Buffer(JSON.stringify(orderData)),{replyTo:q.queue,correlationId:orderData.userId.toString()})
+							resolve(true)
+						})
+					})
+				})
+			}
+		})
+	})
+}
 
 module.exports = {
 	getAllRoomAvailable : getAllRoomAvailable,
@@ -282,5 +312,6 @@ module.exports = {
 	cancelBook: cancelBook,
 	updateAfterCancel: updateAfterCancel,
 	handleAvailableRoomData: handleAvailableRoomData,
-	handleOtherAvailableRoom: handleOtherAvailableRoom
+	handleOtherAvailableRoom: handleOtherAvailableRoom,
+	mqHandleCreateOrder: mqHandleCreateOrder
 }

@@ -2,37 +2,54 @@ var database = require('../providers/databaseProvider');
 var async = require('async')
 var projectProvider = require('../providers/projectProvider')
 var moment = require('moment')
+var orderModel = require('../models/order')
 
 var createOrder = function(req,res,next) {
-	console.log('ini masuk ke sini ')
-	database.pool.getConnection('MASTER',function(err,connection) {
-		connection.beginTransaction(function() {
-			let roomOrderArr = req.body.roomOrdered;
-			let userId = req.body.userId;
-			let checkInTime = req.body.checkInTime;
-			let night = req.body.night;
-			let detail = req.body.detailOrder || '';
-
-			projectProvider.createOrder(connection,async,roomOrderArr,checkInTime,detail,userId,moment,night)
-				.then(rezz => {
-						connection.commit(function () {
-							connection.release();
-							res.status(200).json({
-								message: 'Your Hotel Room has been Booked',
-								status: 'Order Success'
-							})
-						})
-				}).catch(err=> {
-					// console.log(err, '-- ')
-					req.body.error =  {
-						status_code: err.status_code,
-						status: err.status,
-						message: err.message
-					}
-					return next();
+		console.log(req.body)
+		projectProvider.mqHandleCreateOrder(req.body,moment)
+			.then(resu=> {
+				// console.log(res)
+				res.status(200).json({
+					message: 'Order Has Been Queue',
+					status: 'Success'
 				})
-		})
-	})
+			}).catch(err=> {
+				req.body.error = {
+					statusCode: err.statusCode,
+					status: err.status,
+					message: err.message
+				}
+				return next()
+			})
+	// console.log('ini masuk ke sini ')
+	// database.pool.getConnection('MASTER',function(err,connection) {
+	// 	connection.beginTransaction(function() {
+	// 		let roomOrderArr = req.body.roomOrdered;
+	// 		let userId = req.body.userId;
+	// 		let checkInTime = req.body.checkInTime;
+	// 		let night = req.body.night;
+	// 		let detail = req.body.detail || '';
+
+	// 		projectProvider.createOrder(connection,async,roomOrderArr,checkInTime,detail,userId,moment,night)
+	// 			.then(rezz => {
+	// 					connection.commit(function () {
+	// 						connection.release();
+	// 						res.status(200).json({
+	// 							message: 'Your Hotel Room has been Booked',
+	// 							status: 'Order Success'
+	// 						})
+	// 					})
+	// 			}).catch(err=> {
+	// 				// console.log(err, '-- ')
+	// 				req.body.error =  {
+	// 					statusCode: err.statusCode,
+	// 					status: err.status,
+	// 					message: err.message
+	// 				}
+	// 				return next();
+	// 			})
+	// 	})
+	// })
 }
 
 var cancelOrder = function(req,res,next) {
@@ -40,7 +57,7 @@ var cancelOrder = function(req,res,next) {
 		if(err) {
 			req.body.error = {
 				status: 'Internal Server Error',
-				status_code: 500,
+				statusCode: 500,
 				message: err.message
 			}
 			return next()
@@ -62,7 +79,7 @@ var cancelOrder = function(req,res,next) {
 								connection.release();
 								req.body.error = {
 									status: err.status,
-									status_code: err.status_code,
+									statusCode: err.statusCode,
 									message: err.message
 								}
 								return next();
@@ -74,7 +91,7 @@ var cancelOrder = function(req,res,next) {
 							connection.release();
 							req.body.error = {
 								status: err.status,
-								status_code: err.status_code,
+								statusCode: err.statusCode,
 								message: err.message
 							}
 							return next();
@@ -90,7 +107,7 @@ var editOrder = function(req,res,next) {
 		if(err) {
 			callback({
 				status: 'Internal Server Error',
-				status_code: 500,
+				statusCode: 500,
 				message: err.message
 			})
 		} else {
@@ -104,7 +121,7 @@ var allAvailableRoom = function(req,res,next) {
 		if(err) {
 			req.body.error = {
 				status: 'Internal Server Error',
-				status_code: 500
+				statusCode: 500
 			}
 			return next()
 		} else {
@@ -133,7 +150,7 @@ var allAvailableRoom = function(req,res,next) {
 				connection.release()
 				req.body.error = {
 					status: err.status,
-					status_code: err.status_code,
+					statusCode: err.statusCode,
 					message: err.message
 				}
 				return next()

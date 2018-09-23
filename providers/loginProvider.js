@@ -11,7 +11,7 @@ var login = function(connection,email,password) {
 						console.log(rez)
 						if(err) {
 							return reject({
-								status_code: 500,
+								statusCode: 500,
 								status: 'Internal Server Error',
 								message: err.message
 							})
@@ -19,7 +19,7 @@ var login = function(connection,email,password) {
 							return resolve(rez[0].token)
 						} else {
 							return reject({
-								status_code: 403,
+								statusCode: 403,
 								status: 'Login Failed',
 								message: 'Invalid Password'
 							})
@@ -27,7 +27,7 @@ var login = function(connection,email,password) {
 					})
 				} else {
 					return reject({
-						status_code: 403,
+						statusCode: 403,
 						status: 'Login Failed',
 						message: 'Invalid Email Format'
 					})
@@ -50,7 +50,7 @@ var singUp = function(connection,userData,async) {
 						if (err) {
 							console.log('lol')
 							callback({
-								status_code: 500,
+								statusCode: 500,
 								status: 'Internal Server Error',
 								message: err.message
 							})
@@ -58,7 +58,7 @@ var singUp = function(connection,userData,async) {
 							if (rezz.length > 0) {
 								console.log('asaa')
 								callback({
-									status_code: 404,
+									statusCode: 404,
 									status: 'Registration Failed',
 									message: 'Email Has been Used'
 								})
@@ -75,7 +75,7 @@ var singUp = function(connection,userData,async) {
 						if (err) {
 							console.log('aa ',err)
 							callback({
-								status_code: 500,
+								statusCode: 500,
 								status: 'Internal Server Error',
 								message: err.message
 							})
@@ -88,7 +88,7 @@ var singUp = function(connection,userData,async) {
 				if (err) {
 					console.log(err)
 					let errorObj = {
-						status_code: err.status_code,
+						statusCode: err.statusCode,
 						status: err.status,
 						message: err.message
 					}
@@ -102,7 +102,7 @@ var singUp = function(connection,userData,async) {
 		} else {
 			return reject({
 				status: 'Email Format Invalid ',
-				status_code: 404,
+				statusCode: 404,
 				message: 'Please Checkout Your Email format'
 			}) // sampe disini
 		}
